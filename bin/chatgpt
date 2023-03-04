@@ -1,3 +1,4 @@
 #!/bin/sh
 
-deno task dev
+BASEDIR=$(dirname "$0")
+deno run -A "$BASEDIR/../src/cli.ts" $@
