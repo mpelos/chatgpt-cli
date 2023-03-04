@@ -6,7 +6,7 @@ import process from 'node:process';
 const promptFn = prompt;
 
 const chatGptClient = new ChatGptClient({
-  apiKey: Deno.env.get('CHATGPT_API_KEY') as string,
+  apiKey: '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',
   hostname: 'api.openai.com',
 });
 const history: ChatCompletionRequestMessage[] = [];
