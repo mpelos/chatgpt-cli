@@ -1,4 +1,5 @@
 #!/bin/sh
 
-BASEDIR=$(dirname "$0")
+FILEPATH=$(readlink -f "$0")
+BASEDIR=$(dirname $FILEPATH)
 deno run -A "$BASEDIR/../src/cli.ts" $@
