@@ -33,6 +33,11 @@ See the `CHAT_ID` using `list` command.
 ./bin/chatgpt delete CHAT_ID
 ```
 
+### Chat history
+```
+./bin/chatgpt history CHAT_ID
+```
+
 ## Chat Example
 ```
 ➜  chatgpt git:(master) ✗ ./bin/chatgpt load 1

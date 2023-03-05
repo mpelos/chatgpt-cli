@@ -2,6 +2,7 @@ import { program } from 'npm:commander';
 import chalk from 'npm:chalk';
 import initChat from './chat.ts';
 import path from 'node:path';
+import process from 'node:process';
 
 import { ChatConfig, Config } from './config.model.ts';
 
@@ -12,6 +13,25 @@ program
   .description('CLI wrapper for ChatGPT')
   .version('0.0.1')
   .option('-f, --file <filename>', 'ChatGPT CLI configuration file', DEFAULT_CONFIG_PATH)
+
+program.command('config')
+  .description('Config CLI')
+  .action((options) => {
+    const apiKey = prompt(chalk.bgGray('ChatGPT API key: '));
+
+    if (!apiKey) {
+      console.log("It's necessary to provide the ChatGPT API key")
+      return;
+    }
+
+    let config = loadConfig(options.filename);
+    if (!config) { config = new Config({ apiKey }); }
+    config.apiKey = apiKey;
+
+    writeConfig(config, options.filename);
+
+    console.log("ChatGPT CLI configured");
+  });
 
 program.command('new')
   .description('Creates a new chat')
@@ -88,24 +108,33 @@ program.command('delete')
     console.log(`Chat deleted: "${chatConfig.name}"`)
   });
 
-program.command('config')
-  .description('Config CLI')
-  .action((options) => {
-    const apiKey = prompt(chalk.bgGray('ChatGPT API key: '));
+  program.command('history')
+    .description('Delete chat')
+    .argument('<chatId>', 'Chat ID')
+    .action((chatId, options) => {
+      const config = loadConfig(options.filename);
+      if (!config) { return; }
 
-    if (!apiKey) {
-      console.log("It's necessary to provide the ChatGPT API key")
-      return;
-    }
+      const chatIndex = Number(chatId) - 1;
+      const chatConfig = config.chats[chatIndex];
 
-    let config = loadConfig(options.filename);
-    if (!config) { config = new Config({ apiKey }); }
-    config.apiKey = apiKey;
+      if (!chatConfig) {
+        console.log('Chat not found! The chats available are:\n');
+        listChats(config);
+        return;
+      }
 
-    writeConfig(config, options.filename);
+      chatConfig.history.forEach(message => {
+        const messageColor = message.role === 'assistant' ? chalk.blueBright : chalk.white;
 
-    console.log("ChatGPT CLI configured");
-  });
+        if (message.role === 'user') {
+          process.stdout.write(chalk.gray('> '));
+        }
+
+        console.log(messageColor(message.content));
+        message.role === 'assistant' && process.stdout.write('\n');
+      });
+    });
 
 program.parse();
 
