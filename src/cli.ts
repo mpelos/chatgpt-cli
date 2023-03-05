@@ -48,6 +48,7 @@ program.command('new')
 
     initChat(config.apiKey, chatConfig.history, (history) => {
       chatConfig.history = history;
+      chatConfig.updatedAt = new Date();
       writeConfig(config, options.filename);
     });
   });
@@ -70,6 +71,7 @@ program.command('load')
 
     initChat(config.apiKey, chatConfig.history, (history) => {
       chatConfig.history = history;
+      chatConfig.updatedAt = new Date();
       writeConfig(config, options.filename);
     });
   });
@@ -184,5 +186,5 @@ function writeConfig(
   optionFilePath?: string,
 ): void {
   const filePath = optionFilePath || DEFAULT_CONFIG_PATH;
-  Deno.writeTextFileSync(filePath, JSON.stringify(config.toJson()));
+  Deno.writeTextFileSync(filePath, JSON.stringify(config.toJson(), null, 4));
 }
