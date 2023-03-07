@@ -58,6 +58,18 @@ export class ChatGptClient implements ChatGptClientDependencies {
           res.on('error', (err) => reject(err));
 
           res.on('data', (chunk) => {
+            if (res.statusCode && res.statusCode >= 400) {
+              let json: { error: { message: string } } | undefined;
+
+              try {
+                json = JSON.parse(chunk.toString());
+              } catch {
+                throw new Error(chunk.toString().message)
+              }
+
+              if (json) { throw new Error(json.error.message); }
+            }
+
             if (isStream) {
               chunk.toString()
                 .split('data: ')

@@ -22,7 +22,8 @@ const iterate = async (
   if (
     prompt == null &&
     multilinePrompt?.length &&
-    multilinePrompt.slice(-1).every(v => v == null)
+    multilinePrompt.length >= 2 &&
+    multilinePrompt.slice(-2).every(v => v == null)
   ) {
     prompt = multilinePrompt.join('\n');
     multilinePrompt = undefined;
