@@ -31,12 +31,12 @@ const iterate = async (
 
   // Sends prompt to ChatGPT
   if (prompt && !multilinePrompt) {
-    history.push({ role: 'user', content: prompt })
     const response = await chatGptClient.chat(prompt, history, (chunk) => {
       process.stdout.write(chalk.blueBright(chunk));
     });
-    process.stdout.write('\n\n');
-    history.push({ role: 'assistant', content: response })
+    history.push({ role: 'user', content: prompt })
+    process.stdout.write('\n' + chalk.gray(`[${response.usedTokens}]`) + '\n');
+    history.push({ role: 'assistant', content: response.message })
   }
 
   return { history, multilinePrompt };

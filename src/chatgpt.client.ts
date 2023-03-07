@@ -1,5 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
-import { ChatCompletionRequestMessage } from "npm:openai@3.2";
+import { ChatCompletionRequestMessage } from 'npm:openai@3.2';
+import { encode } from 'npm:gpt-3-encoder';
 import https from 'node:https';
 
 // #region typings
@@ -29,7 +30,7 @@ export class ChatGptClient implements ChatGptClientDependencies {
     prompt: string,
     history: ChatCompletionRequestMessage[] = [],
     callback?: (chunk: string) => unknown,
-  ): Promise<string> {
+  ): Promise<{ message: string, usedTokens: number }> {
     const isStream = Boolean(callback);
 
     const systemMessage: ChatCompletionRequestMessage[] = this.systemMessage
@@ -40,6 +41,8 @@ export class ChatGptClient implements ChatGptClientDependencies {
       ...history,
       { role: 'user', content: prompt },
     ];
+    let inputTokens = countTokens(messages);
+    let outputTokens = 0;
 
     return new Promise((resolve, reject) => {
       const req = https.request(
@@ -85,6 +88,7 @@ export class ChatGptClient implements ChatGptClientDependencies {
                   if (!json) { return; }
 
                   const messageChunk = json.choices[0].delta.content;
+                  outputTokens += 1;
 
                   if (!messageChunk) { return; }
 
@@ -96,6 +100,8 @@ export class ChatGptClient implements ChatGptClientDependencies {
             } else {
               try {
                 const json = JSON.parse(chunk.toString());
+                inputTokens = json.usage.prompt_tokens;
+                outputTokens = json.usage.completion_tokens;
                 const message = json.choices[0].message?.content
                 chunks.push(message);
               // deno-lint-ignore no-empty
@@ -104,7 +110,10 @@ export class ChatGptClient implements ChatGptClientDependencies {
           });
 
           res.on('end', () => {
-            resolve(chunks.join(''));
+            resolve({
+              message: chunks.join(''),
+              usedTokens: inputTokens + outputTokens,
+            });
           });
         },
       );
@@ -118,4 +127,8 @@ export class ChatGptClient implements ChatGptClientDependencies {
       req.end();
     });
   }
+}
+
+function countTokens(messages: ChatCompletionRequestMessage[]): number {
+  return messages.map(m => encode(m.content + m.role).length).reduce((acc, v) => acc + v, 0);
 }
