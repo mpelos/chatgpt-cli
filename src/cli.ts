@@ -13,6 +13,12 @@ program
   .description('CLI wrapper for ChatGPT')
   .version('0.0.1')
   .option('-f, --file <filename>', 'ChatGPT CLI configuration file', DEFAULT_CONFIG_PATH)
+  .action((options) => {
+    const config = loadConfig(options.filename);
+    if (!config) { return; }
+
+    initChat(config.apiKey, []);
+  });
 
 program.command('config')
   .description('Config CLI')
